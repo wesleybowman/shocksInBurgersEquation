@@ -115,11 +115,8 @@ def afterShock(nt,l,m):
 
  
     bottomValue=reversed_k[m[-1]]
-#    print bottomValue
     bottomIndex=np.where(k==bottomValue)
-#    print bottomIndex[0][0]
-#    print l[0],bottomIndex[0][0]
-    
+
     kMiddle=k[l[0]:bottomIndex[0][0]]
     uMiddle=u[l[0]:bottomIndex[0][0]]
     
