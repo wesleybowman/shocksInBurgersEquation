@@ -42,11 +42,11 @@ def pickFunction():
         if userInput=='2':
             print 'You chose the tanh! \n'
             x=np.linspace(-10, 10, 10000)
-            u=np.tanh(-x)
+            u=1+np.tanh(-x)
         if userInput=='3':
             print 'You chose the sine wave! \n'
-            x=np.linspace(0,np.pi,10000)
-            u=np.abs(np.sin(x))
+            x=np.linspace(0,2*np.pi,10000)
+            u=1+np.sin(x)
         if userInput!='1' and userInput!='2' and userInput!='3':
             raise Exception
     except Exception:
@@ -57,18 +57,18 @@ def pickFunction():
     
     return u,x,userInput
 
-def function(u,nt):
+def function(nt):
     '''Getting the function given different time values. '''
     t=np.linspace(0,nt,10000)
     k=u*t+x
-    return x,k,u
+    return x,k
 
-def afterShock(u,nt,l=[],m=[]):
+def afterShock(nt,l,m):
     '''Find the shocks that occur after the first shock.
     This function also splits the function into its corresponding parts:
     a top, a middle, and a bottom. This is done so that integration
     later is more easily done.'''
-    
+        
     t=np.linspace(0,nt,10000)
     
     k=u*t+x
@@ -77,6 +77,8 @@ def afterShock(u,nt,l=[],m=[]):
 
     kx=k[kIndex:]
     ux=u[kIndex:]
+    
+    
     
     try:
         for i in range(len(k)):
@@ -91,11 +93,12 @@ def afterShock(u,nt,l=[],m=[]):
     except Exception:
         pass
     
+    
     kTop=k[kIndex:l[0]]
     uTop=u[kIndex:l[0]]
-    
+        
     reversed_k = kx[::-1]
-    
+        
     try:
         for i in range(len(reversed_k)):
                 try:
@@ -105,13 +108,17 @@ def afterShock(u,nt,l=[],m=[]):
                     break
                 length=len(m)
                 if length>=1:
+#                    print length
                     raise Exception
     except Exception:
         pass
-    
+
  
     bottomValue=reversed_k[m[-1]]
+#    print bottomValue
     bottomIndex=np.where(k==bottomValue)
+#    print bottomIndex[0][0]
+#    print l[0],bottomIndex[0][0]
     
     kMiddle=k[l[0]:bottomIndex[0][0]]
     uMiddle=u[l[0]:bottomIndex[0][0]]
@@ -163,16 +170,16 @@ def char(userInput):
      with the shocks plotted as well.'''
 
     if userInput=='1':
-        charx=np.linspace(-10, 10, 100)
+        charx=np.linspace(-10, 10, 50)
         u=np.exp(-charx**2)
     if userInput=='2':
-        charx=np.linspace(-10, 10, 100)
+        charx=np.linspace(-10, 10, 50)
         print 'tanh'
-        u=np.tanh(-charx)
+        u=1+np.tanh(-charx)
     if userInput=='3':
-        charx=np.linspace(-10, 10, 100)
+        charx=np.linspace(0, 2*np.pi, 50)
         print 'sin'
-        u=np.abs(np.sin(charx))
+        u=1+np.sin(charx)
     
     yy=[]
     
@@ -181,10 +188,10 @@ def char(userInput):
         if userInput=='1':
             uIndex=np.where(u==np.exp(-charx[i]**2))
         if userInput=='2':
-            uIndex=np.where(u==np.tanh(-charx))
+            uIndex=np.where(u==1+np.tanh(-charx[i]))
         if userInput=='3':
-            uIndex=np.where(u==np.sin(charx))
-    
+            uIndex=np.where(u==1+np.sin(charx[i]))
+        
         if u[uIndex[0][0]]==0:
             y=[0]*len(u)
         else:
@@ -201,8 +208,9 @@ def char(userInput):
     
     for i in range(len(yy)):
         ax.plot(charx,yy[i]*(charx-charx[i]),'-b')
+
     
-    ax.plot(x00,d[timeIndex[0][0]:],'-r')
+    ax.plot(x00,d[timeIndex[0][0]:]-1.1,'-r')
     
     plt.grid(True)
     plt.show()
@@ -210,7 +218,7 @@ def char(userInput):
 def anim(u,x,fp=5):
     '''Animating the function to see it move based on its speed '''
     fig = plt.figure()
-    ax = plt.axes(xlim=(-10, 10), ylim=(-2, 2))
+    ax = plt.axes(xlim=(-10, 10), ylim=(-3, 3))
     
     line, = ax.plot([], [])
     
@@ -240,7 +248,7 @@ d=np.linspace(0, 10, 1000)
 
 for dtime in d:
 
-    x,k,u=function(u,dtime)
+    x,k=function(dtime)
 
     try:
         kIndex=np.where(k > np.min(k[np.where(np.diff(k) < 0)[0][0]:]))[0][0]
@@ -254,16 +262,17 @@ timeIndex=np.where(d==dtime) #get the index of where we left off in the time arr
 kx=k[kIndex:]
 ux=u[kIndex:]
 x0=k[kIndex]
+#x00.append(x0)   #Append the first shock, but not needed.
 
-#I think the shock should occur at  1.2 seconds for the Gaussian
 
-print ('First shock occurs at: %.4f x at time %0.4f ') %(x0,dtime)
+#print ('First shock occurs at: %.4f x at time %0.4f ') %(x0,dtime)
 
 plot(x,k,u)
 
 x00=[]
 for time in d[timeIndex[0][0]:]:
-    k,kx,ux,kTop,uTop,kMiddle,uMiddle,kBottom,uBottom=afterShock(u,time)
+    k,kx,ux,kTop,uTop,kMiddle,uMiddle,kBottom,uBottom=afterShock(time,[],[])
+    
     
     #Give an initial value of x0 to start out with. This is a 'guess.'
     x0=(kTop[-1]+kTop[0])/2
@@ -271,6 +280,19 @@ for time in d[timeIndex[0][0]:]:
     a=[k[i+1]-k[i] for i in range(len(kTop))]
     b=[k[i+1]-k[i] for i in range(len(kMiddle))]
     c=[k[i+1]-k[i] for i in range(len(kBottom))]
+    
+#    a=[]
+#    b=[]
+#    c=[]
+#    
+#    for i in range(len(kTop)):
+#        a.append(k[i+1]-k[i])
+#
+#    for i in range(len(kMiddle)):
+#        b.append(k[i+1]-k[i])
+#    
+#    for i in range(len(kBottom)):
+#        c.append(k[i+1]-k[i])
     
     rightSide,leftSide,current=-1,1,0 #set values so the while loop isn't true.
     
@@ -287,36 +309,36 @@ for time in d[timeIndex[0][0]:]:
         sections so that they are split down the middle. This is done so 
         that the equal area rule can be done. '''
         
-#        topLeft=uTop[midPoint[0][0]:]*a[0]
-        topLeft=uTop[midPoint[0][0]:]*np.mean(a)   
+        topLeft=uTop[midPoint[0][0]:]*a[0]
+#        topLeft=uTop[midPoint[0][0]:]*np.mean(a)   
         intTopLeft=np.sum(topLeft)
         
-#        middleLeft=uMiddle[:midPoint[0][0]]*b[0]
-        middleLeft=uMiddle[:midPoint[0][0]]*np.mean(b)
+        middleLeft=uMiddle[:midPoint[0][0]]*b[0]
+#        middleLeft=uMiddle[:midPoint[0][0]]*np.mean(b)
         intMidLeft=np.sum(middleLeft)
         
         try:
-#            bottomLeft=uBottom[midPoint[0][0]:endPoint[0][0]]*c[0]
-            bottomLeft=uBottom[midPoint[0][0]:endPoint[0][0]]*np.mean(c)
+            bottomLeft=uBottom[midPoint[0][0]:endPoint[0][0]]*c[0]
+#            bottomLeft=uBottom[midPoint[0][0]:endPoint[0][0]]*np.mean(c)
 
         except IndexError:
             '''Without this, if the top edge goes past the end of the x-value,
             then it will error out, and this only changes the values of the 
             integration by a little. '''
-#            bottomLeft=uBottom[midPoint[0][0]:]*c[0]
-            bottomLeft=uBottom[midPoint[0][0]:]*np.mean(c)
+            bottomLeft=uBottom[midPoint[0][0]:]*c[0]
+#            bottomLeft=uBottom[midPoint[0][0]:]*np.mean(c)
         intBotLeft=np.sum(bottomLeft)
         
         leftSide=intTopLeft-intMidLeft-intBotLeft
         
         '''Moving on from the left side to the right side.'''
         
-#        middleRight=uMiddle[midPoint[0][0]:]*b[0]
-        middleRight=uMiddle[midPoint[0][0]:]*np.mean(b)
+        middleRight=uMiddle[midPoint[0][0]:]*b[0]
+#        middleRight=uMiddle[midPoint[0][0]:]*np.mean(b)
         intMidRight=np.sum(middleRight)
         
-#        bottomRight=uBottom[:midPoint[0][0]]*c[0]
-        bottomRight=uBottom[:midPoint[0][0]]*np.mean(c)
+        bottomRight=uBottom[:midPoint[0][0]]*c[0]
+#        bottomRight=uBottom[:midPoint[0][0]]*np.mean(c)
         intBotRight=np.sum(bottomRight)
         
         rightSide=intMidRight-intBotRight
@@ -338,16 +360,20 @@ for time in d[timeIndex[0][0]:]:
         '''Change the guess to get the areas as close as possible to one another. '''
         
         if np.abs(rightSide)>np.abs(leftSide):
-            x0+=0.001
+            x0+=0.01
 
         else:
-            x0-=0.001
+            x0-=0.01
        
         if np.abs(rightSide)-np.abs(leftSide)<0.5 or np.abs(leftSide)-np.abs(rightSide)>0.5:
+#            print x0
             x00.append(x0)
             break
+        
+print x00
 
 plot(x,k,u)
+
 plotInt()
 char(userInput)
 
@@ -359,11 +385,11 @@ if userInput=='1':
     fp=5  #frames for the animation
 if userInput=='2':
     x = np.linspace(-10, 10, 1000)
-    u=np.tanh(-x)
+    u=1+np.tanh(-x)
     fp=5
 if userInput=='3':
-    x=np.linspace(0,np.pi,1000)
-    u=np.abs(np.sin(x))
+    x=np.linspace(0,2*np.pi,1000)
+    u=1+np.sin(x)
     fp=5
 
 anim(u,x)
@@ -371,5 +397,4 @@ anim(u,x)
 #t2=clock()
 #dt=t2-t1
 #print 'Seconds: %d' %(dt)
-
 
