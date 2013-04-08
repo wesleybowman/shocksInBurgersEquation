@@ -308,7 +308,7 @@ def anim(u,x,fp=5):
 if __name__=='__main__':
     u,x,userInput=pickFunction()
     
-    #t1=clock()
+#    t1=clock()
     
     d=np.linspace(0, 10, 1000)
     
@@ -393,15 +393,15 @@ if __name__=='__main__':
             
             '''Change the guess to get the areas as close as possible to one another. '''
             
-            if np.abs(rightSide)-np.abs(leftSide)<0.05 or np.abs(leftSide)-np.abs(rightSide)<0.05:
+            if np.abs(rightSide)-np.abs(leftSide)<0.005 or np.abs(leftSide)-np.abs(rightSide)<0.005:
                 x00.append(x0)
                 break
             
             if np.abs(rightSide)>np.abs(leftSide):
-                x0+=0.01
+                x0+=np.abs(leftSide)/np.abs(rightSide)
     
             else:
-                x0-=0.01
+                x0-=np.abs(rightSide)/np.abs(leftSide)
     
 #    plot(x,k,u)
 #    plotInt()
@@ -428,7 +428,7 @@ if __name__=='__main__':
     
     anim(u,x)
     
-    #t2=clock()
-    #dt=t2-t1
-    #print 'Seconds: %d' %(dt)
+#    t2=clock()
+#    dt=t2-t1
+#    print 'Seconds: %d' %(dt)
     
